@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rifa a beneficio de Fernanda 💗</title>
+  <meta name="description" content="Rifa solidaria para ayudar a Fernanda y su familia con los gastos de su hospitalización. Cada número es una oportunidad para ayudar." />
+  <meta property="og:title" content="Rifa a beneficio de Fernanda 💗" />
+  <meta property="og:description" content="Cada número tiene un valor de $2.000 y es una oportunidad para ayudar. ¡Reserva el tuyo!" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💗</text></svg>" />
+</head>
+<body>
+
+  <!-- ============================== HERO -->
+  <header class="hero">
+    <p class="hero__kicker">Rifa a beneficio de</p>
+    <h1 class="hero__title">Fernanda</h1>
+    <p class="hero__subtitle">Tu aporte hace la diferencia 💗</p>
+    <a class="btn btn--primary hero__cta" href="#numeros">¡Quiero mi número!</a>
+  </header>
+
+  <main>
+
+    <!-- ============================== PROGRESO -->
+    <section class="section progress" id="progreso" aria-live="polite">
+      <div class="card progress__card">
+        <div class="progress__amounts">
+          <div>
+            <span class="progress__label">Llevamos</span>
+            <strong class="progress__raised" id="recaudado">—</strong>
+          </div>
+          <div class="progress__goal-wrap">
+            <span class="progress__label">Meta</span>
+            <strong class="progress__goal" id="meta">—</strong>
+          </div>
+        </div>
+        <div class="progress__bar" role="progressbar" aria-label="Avance de la recaudación" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="barra">
+          <div class="progress__fill" id="barra-fill"></div>
+          <span class="progress__pct" id="porcentaje">0%</span>
+        </div>
+        <p class="progress__missing" id="faltan">Cargando datos de la rifa…</p>
+        <div class="progress__stats">
+          <div class="stat stat--paid"><strong id="stat-pagados">—</strong><span>pagados</span></div>
+          <div class="stat stat--reserved"><strong id="stat-reservados">—</strong><span>reservados</span></div>
+          <div class="stat stat--free"><strong id="stat-disponibles">—</strong><span>disponibles</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================== HISTORIA -->
+    <section class="section story">
+      <h2 class="section__title">La historia de Fer</h2>
+      <div class="card story__card">
+        <ul class="story__list">
+          <li>Fernanda tiene solo 1 añito y actualmente se encuentra hospitalizada. Todo comenzó con una neumonía que se complicó y la llevó a estar varias semanas en coma inducido.</li>
+          <li>Luego, su hígado se vio afectado y tuvo que ser trasladada a la Católica ante la posibilidad de un trasplante, el cual finalmente pudo descartarse. 🙏</li>
+          <li>Hoy Fernanda sigue hospitalizada y recuperándose ❤️. Al recibir el alta, probablemente necesitará terapias y otros apoyos, lo que traerá nuevos gastos.</li>
+          <li>Por eso estamos realizando una rifa a beneficio para ayudar a la Fran y Panchito con los gastos que han tenido durante este difícil proceso y con los que puedan venir más adelante.</li>
+        </ul>
+      </div>
+      <p class="story__ticket">Cada número tiene un valor de <strong>$2.000</strong> — ¡cada número es una oportunidad para ayudar!</p>
+    </section>
+
+    <!-- ============================== CÓMO PARTICIPAR -->
+    <section class="section how">
+      <h2 class="section__title">¿Cómo participo?</h2>
+      <ol class="how__steps">
+        <li class="card how__step"><span class="how__num">1</span>Elige a tu vendedor y tu número de la suerte.</li>
+        <li class="card how__step"><span class="how__num">2</span>Resérvalo aquí mismo con tu nombre y teléfono.</li>
+        <li class="card how__step"><span class="how__num">3</span>Transfiere $2.000 con los datos de más abajo.</li>
+        <li class="card how__step"><span class="how__num">4</span>Tu vendedor confirma el pago y ¡ya estás participando!</li>
+      </ol>
+    </section>
+
+    <!-- ============================== NÚMEROS -->
+    <section class="section numbers" id="numeros">
+      <h2 class="section__title">Elige tu número</h2>
+
+      <div class="numbers__controls">
+        <label class="numbers__label" for="vendedor-select">Vendedor:</label>
+        <select id="vendedor-select" class="numbers__select" aria-label="Elegir vendedor"></select>
+      </div>
+
+      <div class="numbers__legend">
+        <span class="legend legend--free">Disponible</span>
+        <span class="legend legend--reserved">Reservado</span>
+        <span class="legend legend--paid">Pagado</span>
+      </div>
+
+      <div class="numbers__grid" id="grid" role="list"></div>
+      <p class="numbers__hint" id="grid-hint"></p>
+    </section>
+
+    <!-- ============================== PREMIOS -->
+    <section class="section prizes">
+      <h2 class="section__title">Premios</h2>
+      <div class="card prizes__card">
+        <ul class="prizes__list">
+          <li>🧺 Canasta 2:1 (productos gourmet)</li>
+          <li>🥤 Licuadora</li>
+          <li>🍚 Olla arrocera</li>
+          <li>🎬 Entrada doble al cine</li>
+          <li>🩺 Uniforme clínico <a href="https://instagram.com/scrubsmania" target="_blank" rel="noopener">@scrubsmania</a></li>
+          <li>💍 2 pares de aros de arcilla <a href="https://instagram.com/aliciamorrisclay" target="_blank" rel="noopener">@aliciamorrisclay</a></li>
+          <li>🦷 Limpieza dental</li>
+          <li>🥪 Sandwichera viral</li>
+          <li>🔌 Minipimer</li>
+          <li>🤱 2 asesorías de lactancia o evaluación MOF</li>
+          <li>🍞 3 panes de hogazas + 2 cajas de bollería</li>
+        </ul>
+        <p class="prizes__more">¡Y muchos premios sorpresa! 🎁</p>
+      </div>
+    </section>
+
+    <!-- ============================== TRANSFERENCIA -->
+    <section class="section transfer">
+      <h2 class="section__title">Datos de transferencia</h2>
+      <div class="card transfer__card">
+        <dl class="transfer__data">
+          <div><dt>Nombre</dt><dd>Daniela Beatriz Sandoval Heijboer</dd></div>
+          <div><dt>RUT</dt><dd>17.659.501-9</dd></div>
+          <div><dt>Banco</dt><dd>Mercado Pago</dd></div>
+          <div><dt>Tipo de cuenta</dt><dd>Cuenta Vista</dd></div>
+          <div><dt>N° de cuenta</dt><dd>1012244925</dd></div>
+          <div><dt>Correo</dt><dd>danielasandovalheijboer@gmail.com</dd></div>
+        </dl>
+        <button class="btn btn--secondary" id="copy-transfer" type="button">📋 Copiar datos</button>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <p class="footer__heart">💗</p>
+    <p class="footer__thanks">Gracias por el apoyo</p>
+  </footer>
+
+  <!-- ============================== MODAL RESERVA -->
+  <div class="modal" id="modal" hidden>
+    <div class="modal__backdrop" data-close></div>
+    <div class="modal__box card" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <button class="modal__close" type="button" data-close aria-label="Cerrar">✕</button>
+
+      <div id="modal-form-view">
+        <h3 class="modal__title" id="modal-title">Reservar el número <span id="modal-numero">—</span></h3>
+        <p class="modal__vendor">Vendedor: <strong id="modal-vendedor">—</strong></p>
+        <form id="reserva-form">
+          <label class="field">
+            <span>Tu nombre</span>
+            <input type="text" id="input-nombre" required maxlength="80" autocomplete="name" placeholder="Nombre y apellido" />
+          </label>
+          <label class="field">
+            <span>Tu teléfono</span>
+            <input type="tel" id="input-telefono" required maxlength="20" autocomplete="tel" placeholder="+56 9 1234 5678" />
+          </label>
+          <p class="modal__error" id="modal-error" hidden></p>
+          <button class="btn btn--primary modal__submit" type="submit" id="modal-submit">Reservar 💗</button>
+        </form>
+      </div>
+
+      <div id="modal-success-view" hidden>
+        <h3 class="modal__title">¡Número reservado! 🎉</h3>
+        <p class="modal__success-text">
+          Reservaste el número <strong id="success-numero">—</strong> con <strong id="success-vendedor">—</strong>.
+          Ahora transfiere <strong>$2.000</strong> a los datos de la sección
+          <em>Datos de transferencia</em> y tu vendedor confirmará el pago. ¡Gracias por ayudar a Fer! 💗
+        </p>
+        <button class="btn btn--primary" type="button" data-close>Listo</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>

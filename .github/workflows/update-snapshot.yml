@@ -1,0 +1,44 @@
+name: Actualizar snapshot de datos
+
+on:
+  schedule:
+    # Cada hora. GitHub puede demorarlo unos minutos; es un snapshot, no pasa nada.
+    - cron: '0 * * * *'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Descargar datos del Apps Script
+        run: |
+          cp data/snapshot.json /tmp/snapshot-anterior.json
+          curl -sL --max-time 120 \
+            "https://script.google.com/macros/s/AKfycbwzY-H78plll9nMB_Ny_LhCnH-CkkPPX9-8z67Ic-X8qxfJmkGLrodR2mWkGIpZDvj6/exec" \
+            -o data/snapshot.json
+
+      - name: Validar que el JSON sea correcto
+        run: node -e "const d = require('./data/snapshot.json'); if (!d.ok || !Array.isArray(d.vendedores)) { throw new Error('Respuesta inválida'); }"
+
+      - name: Commit solo si cambió algo real
+        run: |
+          # El campo "actualizado" cambia en cada request: lo ignoramos al comparar.
+          if node -e "
+            const fs = require('fs');
+            const strip = (p) => { const d = JSON.parse(fs.readFileSync(p, 'utf8')); delete d.actualizado; return JSON.stringify(d); };
+            process.exit(strip('data/snapshot.json') === strip('/tmp/snapshot-anterior.json') ? 0 : 1);
+          "; then
+            echo 'Sin cambios reales, no se commitea.'
+            git checkout -- data/snapshot.json
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add data/snapshot.json
+            git commit -m "chore: actualizar snapshot de datos"
+            git push
+          fi

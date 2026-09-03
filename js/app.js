@@ -10,6 +10,11 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbwzY-H78plll9nMB_Ny_LhC
 const PRECIO_FALLBACK = 2000;
 const DEMO_MODE = !API_URL;
 
+// Datos iniciales instantáneos mientras llega la respuesta (lenta) de Apps Script:
+// snapshot del repo (lo refresca un GitHub Action cada hora) + cache del navegador.
+const SNAPSHOT_URL = 'data/snapshot.json';
+const CACHE_KEY = 'rifa-fer-data';
+
 const clp = (n) => '$' + Number(n).toLocaleString('es-CL');
 
 // ------------------------------------------------------------------ estado
@@ -29,17 +34,64 @@ async function cargarDatos() {
     return;
   }
 
+  // Pintado instantáneo: última visita (localStorage) o snapshot del repo.
+  if (!data) {
+    const previo = leerCache() || (await leerSnapshot());
+    if (previo) {
+      data = previo;
+      render();
+      setUpdating(true);
+    }
+  }
+
   try {
     const res = await fetch(API_URL);
     const json = await res.json();
     if (!json.ok) throw new Error(json.error || 'Respuesta inválida');
     data = json;
+    guardarCache(json);
     render();
   } catch (err) {
-    document.getElementById('faltan').textContent =
-      'No pudimos cargar los datos de la rifa. Recarga la página o inténtalo más tarde.';
+    if (!data) {
+      document.getElementById('faltan').textContent =
+        'No pudimos cargar los datos de la rifa. Recarga la página o inténtalo más tarde.';
+    }
     console.error('Error cargando datos:', err);
+  } finally {
+    setUpdating(false);
   }
+}
+
+function leerCache() {
+  try {
+    const json = JSON.parse(localStorage.getItem(CACHE_KEY));
+    return json && json.ok ? json : null;
+  } catch {
+    return null;
+  }
+}
+
+function guardarCache(json) {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify(json));
+  } catch {
+    /* modo incógnito o storage lleno: seguimos sin cache */
+  }
+}
+
+async function leerSnapshot() {
+  try {
+    const res = await fetch(SNAPSHOT_URL, { cache: 'no-cache' });
+    if (!res.ok) return null;
+    const json = await res.json();
+    return json && json.ok ? json : null;
+  } catch {
+    return null;
+  }
+}
+
+function setUpdating(visible) {
+  document.getElementById('updating').hidden = !visible;
 }
 
 // ------------------------------------------------------------------ render

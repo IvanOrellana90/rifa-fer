@@ -264,6 +264,7 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
+  flex-wrap: wrap;
   gap: 0.7rem;
   margin-bottom: 1rem;
 }
@@ -272,6 +273,7 @@ body {
 
 .numbers__select {
   font-family: var(--font-body);
+  /* 16px mínimo: evita que iOS haga zoom automático al enfocar el select */
   font-size: 1rem;
   font-weight: 700;
   color: var(--navy);
@@ -279,6 +281,8 @@ body {
   border: 2px solid var(--pink);
   border-radius: 12px;
   background: var(--white);
+  max-width: 100%;
+  min-width: 0;
 }
 
 .numbers__legend {
@@ -497,4 +501,12 @@ body {
   .progress__amounts { flex-direction: column; align-items: flex-start; }
   .progress__goal-wrap { text-align: left; }
   .numbers__grid { grid-template-columns: repeat(5, 1fr); }
+
+  /* Selector de encargado(a): etiqueta arriba y select a lo ancho, cómodo al dedo */
+  .numbers__controls { flex-direction: column; align-items: stretch; gap: 0.4rem; }
+  .numbers__label { text-align: left; }
+  .numbers__select { width: 100%; padding: 0.8rem 1rem; }
+
+  /* La barra flotante no debe desbordar en pantallas angostas */
+  .selectbar { width: calc(100% - 1.6rem); justify-content: space-between; }
 }

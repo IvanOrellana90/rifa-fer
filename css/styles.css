@@ -332,6 +332,13 @@ body {
 
 .number:disabled { cursor: not-allowed; }
 
+.number--selected {
+  background: var(--navy);
+  border-color: var(--navy);
+  color: var(--white);
+  transform: scale(1.06);
+}
+
 .number--reservado {
   background: var(--reserved);
   border-color: var(--reserved);
@@ -402,6 +409,28 @@ body {
   font-size: 2.2rem;
   color: var(--pink-strong);
 }
+
+/* ------------------------------------------------ barra de selección */
+
+.selectbar {
+  position: fixed;
+  left: 50%;
+  bottom: 1.2rem;
+  transform: translateX(-50%);
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: var(--white);
+  border-radius: 999px;
+  box-shadow: 0 10px 30px rgba(41, 57, 92, 0.3);
+  padding: 0.5rem 0.6rem 0.5rem 1.4rem;
+  white-space: nowrap;
+}
+
+.selectbar[hidden] { display: none; }
+
+.selectbar__text { font-weight: 800; }
 
 /* ------------------------------------------------ modal */
 

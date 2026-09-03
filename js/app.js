@@ -21,7 +21,7 @@ const clp = (n) => '$' + Number(n).toLocaleString('es-CL');
 
 let data = null;
 let vendedorActual = null;
-let seleccion = null; // { vendedor, numero }
+let seleccionados = new Set(); // números elegidos del encargado(a) actual
 
 // ------------------------------------------------------------------ carga
 
@@ -145,6 +145,13 @@ function renderGrid() {
   const vendedor = data.vendedores.find((v) => v.vendedor === vendedorActual);
   if (!vendedor) return;
 
+  // Tras un refresco de datos, soltamos números que ya no están disponibles.
+  seleccionados.forEach((num) => {
+    const n = vendedor.numeros.find((x) => x.numero === num);
+    if (!n || !esDisponible(n.estado)) seleccionados.delete(num);
+  });
+  actualizarSelectbar();
+
   vendedor.numeros.forEach((n) => {
     const btn = document.createElement('button');
     btn.type = 'button';
@@ -162,8 +169,10 @@ function renderGrid() {
       btn.disabled = true;
       btn.title = 'Reservado';
     } else {
-      btn.title = `Reservar el número ${n.numero}`;
-      btn.addEventListener('click', () => abrirModal(vendedor.vendedor, n.numero));
+      btn.classList.toggle('number--selected', seleccionados.has(n.numero));
+      btn.title = `Seleccionar el número ${n.numero}`;
+      btn.setAttribute('aria-pressed', seleccionados.has(n.numero));
+      btn.addEventListener('click', () => toggleSeleccion(n.numero));
     }
 
     grid.appendChild(btn);
@@ -175,12 +184,38 @@ function esDisponible(estado) {
   return e === '' || e === 'disponible';
 }
 
+// ------------------------------------------------------------------ selección
+
+function toggleSeleccion(numero) {
+  if (seleccionados.has(numero)) seleccionados.delete(numero);
+  else seleccionados.add(numero);
+  renderGrid();
+}
+
+function actualizarSelectbar() {
+  const bar = document.getElementById('selectbar');
+  const count = seleccionados.size;
+  bar.hidden = count === 0;
+  if (!count) return;
+  const total = count * (data?.precio || PRECIO_FALLBACK);
+  document.getElementById('selectbar-text').textContent =
+    `${count} ${count === 1 ? 'número' : 'números'} · ${clp(total)}`;
+}
+
+function formatNumeros(nums) {
+  const orden = [...nums].sort((a, b) => a - b);
+  if (orden.length === 1) return 'el número ' + orden[0];
+  return 'los números ' + orden.slice(0, -1).join(', ') + ' y ' + orden[orden.length - 1];
+}
+
 // ------------------------------------------------------------------ modal
 
-function abrirModal(vendedor, numero) {
-  seleccion = { vendedor, numero };
-  document.getElementById('modal-numero').textContent = numero;
-  document.getElementById('modal-vendedor').textContent = vendedor;
+function abrirModal() {
+  if (!seleccionados.size || !vendedorActual) return;
+  const total = seleccionados.size * (data?.precio || PRECIO_FALLBACK);
+  document.getElementById('modal-numeros').textContent = formatNumeros([...seleccionados]);
+  document.getElementById('modal-total').textContent = clp(total);
+  document.getElementById('modal-vendedor').textContent = vendedorActual;
   document.getElementById('modal-error').hidden = true;
   document.getElementById('modal-form-view').hidden = false;
   document.getElementById('modal-success-view').hidden = true;
@@ -191,13 +226,13 @@ function abrirModal(vendedor, numero) {
 
 function cerrarModal() {
   document.getElementById('modal').hidden = true;
-  seleccion = null;
 }
 
 async function enviarReserva(event) {
   event.preventDefault();
-  if (!seleccion) return;
+  if (!seleccionados.size) return;
 
+  const numeros = [...seleccionados].sort((a, b) => a - b);
   const nombre = document.getElementById('input-nombre').value.trim();
   const telefono = document.getElementById('input-telefono').value.trim();
   const submit = document.getElementById('modal-submit');
@@ -211,29 +246,46 @@ async function enviarReserva(event) {
     let resultado;
     if (DEMO_MODE) {
       await new Promise((r) => setTimeout(r, 600));
-      resultado = { ok: true };
+      resultado = { ok: true, reservados: numeros, fallidos: [] };
     } else {
       // Sin headers custom: el body viaja como text/plain y evita el preflight
       // CORS que Apps Script no soporta.
-      const res = await fetch(API_URL, {
-        method: 'POST',
-        body: JSON.stringify({ ...seleccion, nombre, telefono }),
-      });
+      const payload = { vendedor: vendedorActual, nombre, telefono };
+      if (numeros.length === 1) payload.numero = numeros[0];
+      else payload.numeros = numeros;
+      const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
       resultado = await res.json();
     }
 
     if (!resultado.ok) throw new Error(resultado.error || 'No se pudo reservar.');
 
-    marcarReservadoLocal(seleccion.vendedor, seleccion.numero);
-    document.getElementById('success-numero').textContent = seleccion.numero;
-    document.getElementById('success-vendedor').textContent = seleccion.vendedor;
+    const reservados = resultado.reservados || [resultado.numero];
+    const fallidos = resultado.fallidos || [];
+    reservados.forEach((num) => marcarReservadoLocal(vendedorActual, num));
+
+    document.getElementById('success-numeros').textContent = formatNumeros(reservados);
+    document.getElementById('success-vendedor').textContent = vendedorActual;
+    document.getElementById('success-total').textContent =
+      clp(reservados.length * (data?.precio || PRECIO_FALLBACK));
+
+    const warning = document.getElementById('success-warning');
+    if (fallidos.length) {
+      warning.textContent =
+        `Ojo: ${formatNumeros(fallidos.map((f) => f.numero))} ya no ` +
+        `${fallidos.length === 1 ? 'estaba disponible y quedó' : 'estaban disponibles y quedaron'} fuera de la reserva.`;
+      warning.hidden = false;
+    } else {
+      warning.hidden = true;
+    }
+
+    seleccionados.clear();
     document.getElementById('modal-form-view').hidden = true;
     document.getElementById('modal-success-view').hidden = false;
     render();
   } catch (err) {
     error.textContent = err.message;
     error.hidden = false;
-    // Si el número se lo ganó otro, refrescamos para mostrar el estado real.
+    // Si los números se los ganó otro, refrescamos para mostrar el estado real.
     if (!DEMO_MODE) cargarDatos();
   } finally {
     submit.disabled = false;
@@ -288,8 +340,11 @@ function datosDemo() {
 
 document.getElementById('vendedor-select').addEventListener('change', (e) => {
   vendedorActual = e.target.value;
+  seleccionados.clear();
   renderGrid();
 });
+
+document.getElementById('selectbar-btn').addEventListener('click', abrirModal);
 
 document.getElementById('reserva-form').addEventListener('submit', enviarReserva);
 

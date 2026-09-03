@@ -134,47 +134,64 @@ function doPost(e) {
   try {
     const body = JSON.parse(e.postData.contents);
     const vendedor = clean(body.vendedor);
-    const numero = Number(body.numero);
     const nombre = clean(body.nombre);
     const telefono = clean(body.telefono);
 
-    if (!vendedor || !numero || !nombre || !telefono) {
+    // Acepta un número solo ({numero: 5}) o varios ({numeros: [3, 7, 12]}).
+    let numeros = Array.isArray(body.numeros) ? body.numeros : [body.numero];
+    numeros = numeros.map(Number).filter(function (n) { return n > 0; });
+
+    if (!vendedor || !numeros.length || !nombre || !telefono) {
       return jsonResponse({ ok: false, error: 'Faltan datos para la reserva.' });
+    }
+    if (numeros.length > 20) {
+      return jsonResponse({ ok: false, error: 'Máximo 20 números por reserva.' });
     }
 
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     const sheet = ss.getSheetByName(vendedor);
-    if (!sheet) return jsonResponse({ ok: false, error: 'Vendedor no encontrado.' });
+    if (!sheet) return jsonResponse({ ok: false, error: 'Encargado(a) no encontrado(a).' });
 
     const values = sheet.getDataRange().getValues();
     const header = findHeaderRow(values);
     if (!header) {
-      return jsonResponse({ ok: false, error: 'La pestaña del vendedor no tiene el formato esperado.' });
+      return jsonResponse({ ok: false, error: 'La pestaña no tiene el formato esperado.' });
     }
     const cols = header.cols;
 
+    const filaPorNumero = {};
     for (let r = header.row + 1; r < values.length; r++) {
-      if (Number(values[r][cols.numero]) !== numero) continue;
+      const n = Number(values[r][cols.numero]);
+      if (n > 0) filaPorNumero[n] = r;
+    }
 
+    const marca = 'Reserva web · ' + new Date().toLocaleString('es-CL', { timeZone: 'America/Santiago' });
+    const reservados = [];
+    const fallidos = [];
+
+    numeros.forEach(function (numero) {
+      const r = filaPorNumero[numero];
+      if (r === undefined) {
+        fallidos.push({ numero: numero, error: 'no encontrado' });
+        return;
+      }
       const estadoActual = String(values[r][cols.estado]).trim().toLowerCase();
       if (estadoActual && estadoActual !== ESTADO_DISPONIBLE) {
-        return jsonResponse({ ok: false, error: 'Ese número ya no está disponible. Elige otro.' });
+        fallidos.push({ numero: numero, error: 'ya no está disponible' });
+        return;
       }
-
       const row = r + 1;
       sheet.getRange(row, cols.estado + 1).setValue(ESTADO_RESERVADO);
       if (cols.nombre !== -1) sheet.getRange(row, cols.nombre + 1).setValue(nombre);
       if (cols.telefono !== -1) sheet.getRange(row, cols.telefono + 1).setValue(telefono);
-      if (cols.observaciones !== -1) {
-        sheet
-          .getRange(row, cols.observaciones + 1)
-          .setValue('Reserva web · ' + new Date().toLocaleString('es-CL', { timeZone: 'America/Santiago' }));
-      }
+      if (cols.observaciones !== -1) sheet.getRange(row, cols.observaciones + 1).setValue(marca);
+      reservados.push(numero);
+    });
 
-      return jsonResponse({ ok: true, vendedor: vendedor, numero: numero });
+    if (!reservados.length) {
+      return jsonResponse({ ok: false, error: 'Esos números ya no están disponibles. Elige otros.', fallidos: fallidos });
     }
-
-    return jsonResponse({ ok: false, error: 'Número no encontrado en la pestaña de ' + vendedor + '.' });
+    return jsonResponse({ ok: true, vendedor: vendedor, reservados: reservados, fallidos: fallidos });
   } catch (err) {
     return jsonResponse({ ok: false, error: 'Error inesperado: ' + err.message });
   } finally {

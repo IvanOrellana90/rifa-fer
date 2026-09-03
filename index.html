@@ -70,20 +70,20 @@
     <section class="section how">
       <h2 class="section__title">¿Cómo participo?</h2>
       <ol class="how__steps">
-        <li class="card how__step"><span class="how__num">1</span>Elige a tu vendedor y tu número de la suerte.</li>
-        <li class="card how__step"><span class="how__num">2</span>Resérvalo aquí mismo con tu nombre y teléfono.</li>
-        <li class="card how__step"><span class="how__num">3</span>Transfiere $2.000 con los datos de más abajo.</li>
-        <li class="card how__step"><span class="how__num">4</span>Tu vendedor confirma el pago y ¡ya estás participando!</li>
+        <li class="card how__step"><span class="how__num">1</span>Elige a tu encargado(a) y tus números de la suerte.</li>
+        <li class="card how__step"><span class="how__num">2</span>Resérvalos aquí mismo con tu nombre y teléfono.</li>
+        <li class="card how__step"><span class="how__num">3</span>Transfiere $2.000 por número con los datos de más abajo.</li>
+        <li class="card how__step"><span class="how__num">4</span>Tu encargado(a) confirma el pago y ¡ya estás participando!</li>
       </ol>
     </section>
 
     <!-- ============================== NÚMEROS -->
     <section class="section numbers" id="numeros">
-      <h2 class="section__title">Elige tu número</h2>
+      <h2 class="section__title">Elige tus números</h2>
 
       <div class="numbers__controls">
-        <label class="numbers__label" for="vendedor-select">Vendedor:</label>
-        <select id="vendedor-select" class="numbers__select" aria-label="Elegir vendedor"></select>
+        <label class="numbers__label" for="vendedor-select">Encargado(a):</label>
+        <select id="vendedor-select" class="numbers__select" aria-label="Elegir encargado o encargada"></select>
       </div>
 
       <div class="numbers__legend">
@@ -93,7 +93,7 @@
       </div>
 
       <div class="numbers__grid" id="grid" role="list"></div>
-      <p class="numbers__hint" id="grid-hint"></p>
+      <p class="numbers__hint" id="grid-hint">Puedes seleccionar varios números a la vez 😉</p>
     </section>
 
     <!-- ============================== PREMIOS -->
@@ -140,6 +140,12 @@
     <p class="footer__thanks">Gracias por el apoyo</p>
   </footer>
 
+  <!-- ============================== BARRA DE SELECCIÓN -->
+  <div class="selectbar" id="selectbar" hidden>
+    <span class="selectbar__text" id="selectbar-text">—</span>
+    <button class="btn btn--primary" id="selectbar-btn" type="button">Reservar 💗</button>
+  </div>
+
   <!-- ============================== MODAL RESERVA -->
   <div class="modal" id="modal" hidden>
     <div class="modal__backdrop" data-close></div>
@@ -147,8 +153,8 @@
       <button class="modal__close" type="button" data-close aria-label="Cerrar">✕</button>
 
       <div id="modal-form-view">
-        <h3 class="modal__title" id="modal-title">Reservar el número <span id="modal-numero">—</span></h3>
-        <p class="modal__vendor">Vendedor: <strong id="modal-vendedor">—</strong></p>
+        <h3 class="modal__title" id="modal-title">Reservar <span id="modal-numeros">—</span></h3>
+        <p class="modal__vendor">Encargado(a): <strong id="modal-vendedor">—</strong> · Total: <strong id="modal-total">—</strong></p>
         <form id="reserva-form">
           <label class="field">
             <span>Tu nombre</span>
@@ -166,10 +172,11 @@
       <div id="modal-success-view" hidden>
         <h3 class="modal__title">¡Número reservado! 🎉</h3>
         <p class="modal__success-text">
-          Reservaste el número <strong id="success-numero">—</strong> con <strong id="success-vendedor">—</strong>.
-          Ahora transfiere <strong>$2.000</strong> a los datos de la sección
-          <em>Datos de transferencia</em> y tu vendedor confirmará el pago. ¡Gracias por ayudar a Fer! 💗
+          Reservaste <strong id="success-numeros">—</strong> con <strong id="success-vendedor">—</strong>.
+          Ahora transfiere <strong id="success-total">—</strong> a los datos de la sección
+          <em>Datos de transferencia</em> y tu encargado(a) confirmará el pago. ¡Gracias por ayudar a Fer! 💗
         </p>
+        <p class="modal__error" id="success-warning" hidden></p>
         <button class="btn btn--primary" type="button" data-close>Listo</button>
       </div>
     </div>

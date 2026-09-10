@@ -15,15 +15,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Descargar datos del Apps Script
+      - name: Descargar y validar datos del Apps Script
         run: |
-          cp data/snapshot.json /tmp/snapshot-anterior.json
-          curl -sL --max-time 120 \
-            "https://script.google.com/macros/s/AKfycbwzY-H78plll9nMB_Ny_LhCnH-CkkPPX9-8z67Ic-X8qxfJmkGLrodR2mWkGIpZDvj6/exec" \
-            -o data/snapshot.json
-
-      - name: Validar que el JSON sea correcto
-        run: node -e "const d = require('./data/snapshot.json'); if (!d.ok || !Array.isArray(d.vendedores)) { throw new Error('Respuesta inválida'); }"
+          # Apps Script a veces devuelve una página HTML de error en vez del JSON.
+          # Descargamos a /tmp, validamos y solo entonces tocamos el snapshot real.
+          for intento in 1 2 3; do
+            curl -sL --max-time 120 \
+              "https://script.google.com/macros/s/AKfycbwzY-H78plll9nMB_Ny_LhCnH-CkkPPX9-8z67Ic-X8qxfJmkGLrodR2mWkGIpZDvj6/exec" \
+              -o /tmp/snapshot-nuevo.json || true
+            if node -e "const d = require('/tmp/snapshot-nuevo.json'); if (!d.ok || !Array.isArray(d.vendedores)) process.exit(1);" 2>/dev/null; then
+              echo "Respuesta válida en el intento $intento."
+              exit 0
+            fi
+            echo "Intento $intento: la respuesta no es JSON válido, reintentando en 30s…"
+            sleep 30
+          done
+          echo "::error::El Apps Script no devolvió JSON válido tras 3 intentos."
+          exit 1
 
       - name: Commit solo si cambió algo real
         run: |
@@ -31,11 +39,11 @@ jobs:
           if node -e "
             const fs = require('fs');
             const strip = (p) => { const d = JSON.parse(fs.readFileSync(p, 'utf8')); delete d.actualizado; return JSON.stringify(d); };
-            process.exit(strip('data/snapshot.json') === strip('/tmp/snapshot-anterior.json') ? 0 : 1);
+            process.exit(strip('/tmp/snapshot-nuevo.json') === strip('data/snapshot.json') ? 0 : 1);
           "; then
             echo 'Sin cambios reales, no se commitea.'
-            git checkout -- data/snapshot.json
           else
+            cp /tmp/snapshot-nuevo.json data/snapshot.json
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
             git add data/snapshot.json
